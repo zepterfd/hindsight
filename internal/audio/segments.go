@@ -26,7 +26,7 @@ var ErrSegments = errors.New("segments must be in order, apart, and not empty")
 type SegmentsRequest struct {
 	Source   string  // filename of the source take
 	Segments []Range // in order, apart, each at least two fades long
-	Label    string  // optional; defaults to "<source label or stem> · <span>"
+	Label    string  // optional; "<source label or stem> · <span>", or "· N sections"
 }
 
 // CutSegments writes the regions of a take, one after another, as a new take:
@@ -76,7 +76,11 @@ func CutSegments(dir string, req SegmentsRequest, now time.Time) (string, error)
 		if base == "" {
 			base = strings.TrimSuffix(filepath.Base(req.Source), ".wav")
 		}
-		m.Label = base + " · " + spanLabel(first.Start, last.End, info.SampleRate)
+		if len(req.Segments) == 1 {
+			m.Label = base + " · " + spanLabel(first.Start, last.End, info.SampleRate)
+		} else {
+			m.Label = fmt.Sprintf("%s · %d sections", base, len(req.Segments))
+		}
 	}
 	if srcMeta.BPM != nil {
 		bpm := *srcMeta.BPM
