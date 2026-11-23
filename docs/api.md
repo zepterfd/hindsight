@@ -26,6 +26,8 @@ internet.
 | `DELETE /api/take/flags?file=&id=` | Remove one flag |
 | `GET /api/take/analysis?file=` | The analyses a take holds (`sections`, each wrapped: version, when, result or error) and the ones this Pi can run (`available`) |
 | `POST /api/take/analyze?file=&kind=` | Run one analysis of one take now, in the background: 202, 404 for an unknown kind, 409 if it is already under way, 501 if the Pi has none set up |
+| `GET /api/take/similar?file=[&min=][&limit=]` | Takes whose chord progression is like this one's, in any key, best first; `pending` counts takes not fingerprinted yet |
+| `GET /api/takes/groups[?min=]` | Groups of takes that play alike (complete linkage: every pair in a group is at least `score` alike) |
 | `POST /api/take/undo?file=[&op=]` | Undo the newest change to a take, or the one named |
 | `GET /api/trash` | Deleted and pruned takes, most recently deleted first |
 | `POST /api/trash/restore?file=` | Put a take back from the trash, starred |
