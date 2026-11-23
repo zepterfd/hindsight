@@ -531,3 +531,52 @@ test('the bar says the room it is in on its root, for the stylesheet\'s studio a
   page.frames();
   assert.equal($('np').hasAttribute('data-room'), false, 'no room shown: no data-room');
 });
+
+// Select a take in the Listening Room and press ▶ in the bar: the bar holds
+// the tape (selecting loads nothing), so ▶ played the tape -- its reels
+// turned and nothing came out. With a take chosen by selecting it plays that
+// take instead.
+test('▶ with the tape in the bar and a take chosen by selecting plays that take, not the tape', async () => {
+  const { engine, bar, $, click } = await open();
+  const take = aTake();
+  engine.setFind(async (name) => (name === take.t.name ? { t: take.t, player: take.player } : null));
+  engine.setChosen(() => take.t.name);
+  assert.equal(bar.sourceKind, 'tape');
+  click($('np-play'));
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(bar.sourceKind, 'take', 'the take is in the bar');
+  assert.equal(bar.takeName, 'jam_x.wav');
+  assert.equal(take.audio.paused, false, 'and it plays');
+  assert.equal(engine.tape.playing(), false, 'the tape does not');
+});
+
+test('▶ with nothing chosen plays the tape as before, and a tape already playing is stopped, not swapped for the chosen take', async () => {
+  const { engine, bar, $, click } = await open();
+  const take = aTake();
+  engine.setFind(async () => ({ t: take.t, player: take.player }));
+  let chosen = null;
+  engine.setChosen(() => chosen);
+  click($('np-play'));
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(bar.sourceKind, 'tape', 'nothing chosen: the tape');
+  assert.equal(take.audio.paused, true);
+  // A take chosen while the tape plays: ▶ is the tape's pause.
+  const playing = engine.tape.playing();
+  chosen = take.t.name;
+  if (playing) {
+    click($('np-play'));
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(bar.sourceKind, 'tape');
+    assert.equal(take.audio.paused, true);
+  }
+});
+
+test('a chosen take that the room does not hold says so and leaves the tape alone', async () => {
+  const { engine, bar, $, click, w } = await open();
+  engine.setFind(async () => 'missing');
+  engine.setChosen(() => 'jam_gone.wav');
+  click($('np-play'));
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(bar.sourceKind, 'tape');
+  assert.equal(w.toasts.length >= 1, true, 'a toast says why');
+});

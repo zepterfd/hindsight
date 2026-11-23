@@ -120,6 +120,14 @@ sideways scroll).
   behalf on 2026-10-30, while he was away; his to overrule** (the other
   way: a take stays in the Studio's bar until ⏏, as before, with ▶
   playing it).
+- **▶ with a take selected** (`lib/models/engine.js` `playPause`, `setChosen`):
+  selecting a take in the Listening Room (hold its spine) loads nothing into
+  the bar, so with the tape there ▶ played the tape: the reels turned and
+  the take stayed silent (J2.13). The room tells the engine which take is
+  chosen (`setChosen`: the first selected, only while the room is the one
+  shown), and ▶ with the tape in the bar and not playing puts that take in
+  the bar and plays it, from the room's own row as a tap does. With nothing
+  selected ▶ is the tape's as before, and while the tape plays ▶ is its pause.
 - **It folds by its grabber** (`lib/components/transport/fold.js`), a pill on a lip above its
   top edge: a tap toggles, a drag down folds, a drag up unfolds, and it
   slides by a FLIP on the lid spring (a transform, never a height a frame).
