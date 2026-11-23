@@ -5,6 +5,7 @@ cmd/hindsight          wiring and flags
 cmd/hindsight-hub      the hub: certificates and heartbeats for every kit (docs/hub.md)
 internal/config        environment → Config
 internal/audio         device, ring, levels, envelope, saving  (cgo, PortAudio)
+internal/produce       post production: stems leveled, mixed and mastered to a loudness target (ffmpeg); cmd/hindsight-produce is its CLI
 internal/midi          rawmidi watcher, parser, event ring, clock, tempo map, SMF export
 internal/surface       the SMK-37 on Hindsight's firmware: its screen and its panel
 internal/smf           Standard MIDI File writer and reader
