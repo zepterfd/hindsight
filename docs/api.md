@@ -917,9 +917,20 @@ background.
 
 Response: `200 {"name": "jam_2026-09-10_221441.wav"}`.
 
+**Several sections.** Instead of `start_frame` and `end_frame`, the body can
+carry `"ranges": [{"start_frame": 480000, "end_frame": 998400}, {"start_frame": 1440000, "end_frame": 1920000}]`
+(double and triple crop; at most 32). The ranges may arrive in any order but
+must not overlap; they are joined in time order into one new take, each with
+the 3ms fades at both edges so a join never clicks. Flags and dropouts inside
+a section move with it; the default label is `"<source label or stem> · N
+sections"`. With more than one range the take has no downbeat and no `.mid`
+(both are positions on the old timeline). One range is the plain cut, MIDI
+included. Giving both forms is a 400.
+
 | Status | When |
 |---|---|
-| 400 | Bad `file`, malformed body, inverted or out-of-range frames, or a region shorter than two fades (289 frames at 48kHz) |
+| 400 | Bad `file`, malformed body, inverted or out-of-range frames, or a region shorter than two fades (289 frames at 48kHz); with `ranges`: overlapping or more than 32 |
+| 422 | With `ranges`: the take is not 32-bit |
 | 404 | No such take |
 | 507 | Below `MIN_FREE_GB` |
 

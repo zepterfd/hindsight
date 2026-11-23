@@ -1,11 +1,14 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"math"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -128,5 +131,80 @@ func TestTrimSilenceTakesOptionsFromTheBody(t *testing.T) {
 	r.ServeHTTP(w, bad)
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("bad body = %d, want 400", w.Code)
+	}
+}
+
+func postCut(r http.Handler, file, body string) *httptest.ResponseRecorder {
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/api/cut?file="+file, strings.NewReader(body)))
+	return w
+}
+
+func TestCutWithRangesJoinsThemInTimeOrder(t *testing.T) {
+	r, dir := newTestAPI(t)
+	writeGapTake(t, dir, "jam_a.wav", 20) // 30 s at 8 kHz
+	// Given out of order, and a third section: all join in time order.
+	w := postCut(r, "jam_a.wav", `{"ranges":[{"start_frame":160000,"end_frame":200000},{"start_frame":8000,"end_frame":16000},{"start_frame":40000,"end_frame":48000}]}`)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d: %s", w.Code, w.Body)
+	}
+	var out map[string]string
+	if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
+		t.Fatal(err)
+	}
+	info, err := audio.ReadWAVInfo(filepath.Join(dir, out["name"]))
+	if err != nil || info.Frames() != 8000+8000+40000 {
+		t.Fatalf("info = %+v err = %v", info, err)
+	}
+	if got := audio.ReadMeta(filepath.Join(dir, out["name"])).Label; got != "jam_a · 3 sections" {
+		t.Errorf("label = %q", got)
+	}
+}
+
+func TestCutWithRangesRejectsBadLists(t *testing.T) {
+	r, dir := newTestAPI(t)
+	writeGapTake(t, dir, "jam_a.wav", 20)
+	for name, body := range map[string]string{
+		"overlap":  `{"ranges":[{"start_frame":8000,"end_frame":16000},{"start_frame":12000,"end_frame":20000}]}`,
+		"backward": `{"ranges":[{"start_frame":9000,"end_frame":8000}]}`,
+		"past end": `{"ranges":[{"start_frame":8000,"end_frame":9999999}]}`,
+		"short":    `{"ranges":[{"start_frame":8000,"end_frame":8010}]}`,
+		"both":     `{"start_frame":0,"end_frame":9000,"ranges":[{"start_frame":8000,"end_frame":16000}]}`,
+	} {
+		if w := postCut(r, "jam_a.wav", body); w.Code != http.StatusBadRequest {
+			t.Errorf("%s: status = %d, want 400 (%s)", name, w.Code, w.Body)
+		}
+	}
+	var many []string
+	for i := 0; i < 33; i++ {
+		many = append(many, `{"start_frame":`+strconv.Itoa(i*1000)+`,"end_frame":`+strconv.Itoa(i*1000+500)+`}`)
+	}
+	if w := postCut(r, "jam_a.wav", `{"ranges":[`+strings.Join(many, ",")+`]}`); w.Code != http.StatusBadRequest {
+		t.Errorf("33 ranges: status = %d, want 400", w.Code)
+	}
+}
+
+func TestCutWithOneRangeIsThePlainCut(t *testing.T) {
+	r, dir := newTestAPI(t)
+	writeGapTake(t, dir, "jam_a.wav", 20)
+	plain := postCut(r, "jam_a.wav", `{"start_frame":8000,"end_frame":40000}`)
+	if plain.Code != http.StatusOK {
+		t.Fatalf("plain: %d %s", plain.Code, plain.Body)
+	}
+	one := postCut(r, "jam_a.wav", `{"ranges":[{"start_frame":8000,"end_frame":40000}]}`)
+	if one.Code != http.StatusOK {
+		t.Fatalf("ranges: %d %s", one.Code, one.Body)
+	}
+	read := func(w *httptest.ResponseRecorder) []byte {
+		var o map[string]string
+		_ = json.Unmarshal(w.Body.Bytes(), &o)
+		b, err := os.ReadFile(filepath.Join(dir, o["name"]))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return b
+	}
+	if !bytes.Equal(read(plain), read(one)) {
+		t.Error("one range wrote different audio from the plain cut")
 	}
 }

@@ -3,6 +3,7 @@ package audio
 import (
 	"math"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -216,5 +217,28 @@ func TestMoveIntoMapsFramesPastGaps(t *testing.T) {
 		if ok != c.ok || (ok && got != c.out) {
 			t.Errorf("moveInto(%d) = %d, %v; want %d, %v", c.in, got, ok, c.out, c.ok)
 		}
+	}
+}
+
+func TestCutSegmentsLabelsBySectionCountAndOneRegionBySpan(t *testing.T) {
+	dir := t.TempDir()
+	writeTestTake(t, dir, "src.wav", 48000)
+	if err := WriteMeta(filepath.Join(dir, "src.wav"), Meta{Version: MetaVersion, Label: "jam"}); err != nil {
+		t.Fatal(err)
+	}
+	now := time.Date(2026, 11, 23, 9, 0, 0, 0, time.UTC)
+	two, err := CutSegments(dir, SegmentsRequest{Source: "src.wav", Segments: []Range{{1000, 5000}, {20000, 30000}}}, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := ReadMeta(filepath.Join(dir, two)).Label; got != "jam · 2 sections" {
+		t.Errorf("label = %q", got)
+	}
+	one, err := CutSegments(dir, SegmentsRequest{Source: "src.wav", Segments: []Range{{1000, 5000}}}, now.Add(time.Second))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := ReadMeta(filepath.Join(dir, one)).Label; !strings.HasPrefix(got, "jam · 0:") {
+		t.Errorf("label = %q, want the span", got)
 	}
 }

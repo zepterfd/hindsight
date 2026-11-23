@@ -863,12 +863,22 @@ func (a *API) handleCut(w http.ResponseWriter, r *http.Request) {
 	}
 	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4<<10))
 	var body struct {
-		StartFrame int64  `json:"start_frame"`
-		EndFrame   int64  `json:"end_frame"`
-		Label      string `json:"label"`
+		StartFrame int64         `json:"start_frame"`
+		EndFrame   int64         `json:"end_frame"`
+		Ranges     []audio.Range `json:"ranges"`
+		Label      string        `json:"label"`
 	}
 	if err := dec.Decode(&body); err != nil {
 		writeErr(w, http.StatusBadRequest, "invalid JSON body")
+		return
+	}
+	if len(body.Ranges) > 0 {
+		// Several regions of one take, joined (double / triple crop).
+		if body.StartFrame != 0 || body.EndFrame != 0 {
+			writeErr(w, http.StatusBadRequest, "give ranges, or start_frame and end_frame, not both")
+			return
+		}
+		a.cutRanges(w, name, body.Ranges, body.Label)
 		return
 	}
 	if body.StartFrame < 0 || body.EndFrame <= body.StartFrame {
