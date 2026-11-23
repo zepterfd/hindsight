@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gabeduke/hindsight/internal/tailnet"
 	"io"
 	"log"
 	"math"
@@ -109,6 +110,9 @@ type API struct {
 	// tagsMu serialises writes to tags.json (see tags.go).
 	tagsMu sync.Mutex
 
+	// tailscale runs the tailscale program for /api/tailnet; nil is the real one (tests set it).
+	tailscale tailnet.Runner
+
 	// rig is the rig's (rig.go): its hooks and rig.json's labels.
 	rig rigState
 	// recordingHook stands in for the tape's recording in tests.
@@ -195,6 +199,7 @@ func (a *API) SetupRoutes(r *mux.Router) {
 	r.HandleFunc("/api/cut", a.handleCut).Methods(http.MethodPost)
 	r.HandleFunc("/api/flag", a.handleFlagPost).Methods(http.MethodPost)
 	r.HandleFunc("/api/flag", a.handleFlagDelete).Methods(http.MethodDelete)
+	r.HandleFunc("/api/tailnet", a.handleTailnet).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/api/download", a.handleDownload).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/api/peaks", a.handlePeaks).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/api/envelope", a.handleEnvelope).Methods(http.MethodGet, http.MethodHead)

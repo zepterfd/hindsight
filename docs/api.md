@@ -32,6 +32,7 @@ internet.
 | `POST /api/flag` | Flag a moment at the ring's newest frame (the main page's *Flag now*) |
 | `DELETE /api/flag` | Remove one live mark (`?frame=`), or every one (`?all=1`) |
 | `GET /api/peaks?file=` | Precomputed waveform, so phones do not download audio to draw one; with a range, that range's peaks |
+| `GET /api/tailnet` | Whether this Pi is on a Tailscale network and its MagicDNS name (`installed`, `state`, `dns_name`, `online`, `peers`), asked of the `tailscale` program each time and never stored |
 | `GET /api/download?file=[&dl=1]` | Stream inline, or force a download |
 | `DELETE /api/delete?file=` | Move a take and its sidecars to the trash |
 | `POST /api/cut?file=` | Export a region of a take as a new take, with 3ms declick fades |
