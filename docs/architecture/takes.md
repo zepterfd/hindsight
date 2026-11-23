@@ -189,6 +189,32 @@ reaches every open page as any other change to a take.
 exist is the binary's (`cmd/hindsight/analyzers.go`); an analyser that needs
 configuration is left out when it has none.
 
+## Removing silence
+
+`internal/audio/silence.go`, `segments.go`. A take kept from an always-on
+buffer can hold a long stop in the middle (the band went for a drink), and
+that is the part nobody wants to scrub through. `FindSilence` measures the
+peak of every 20 ms window over all channels and calls a run of windows
+quieter than a threshold **silence** once it lasts at least `MinSeconds`
+(15 by default). With no threshold given, one is found from the take: a
+little (10 dB) above its quietest tenth, kept between -75 and -45 dBFS, so a
+hissy room still counts as silent and quiet playing never does.
+
+`TrimSilence` keeps everything but the gaps. Each silence is cut down to
+`KeepSeconds` (1 by default), half left on each side of the join so the sound
+before it rings out and the sound after has its pre-roll, and the pieces are
+written as a **new take** by `CutSegments`. Every piece gets the cut's 3 ms
+declick fades at both edges, so a join never clicks. The source is never
+modified, as with a cut.
+
+`CutSegments` is the general form: any ordered, non-overlapping list of
+regions of one take, joined. The new take carries the source's tempo and lane
+choices, and every flag and dropout that falls inside a region, moved to
+where that region now lies; one in a removed stretch goes with it. With more
+than one region the downbeat and the `.mid` are not carried, because both are
+positions on the old timeline and the bars after a join have moved. One
+region is exactly a cut.
+
 ## Shares queue
 
 `GET /api/render` runs ffmpeg. Two at once on a Pi compete with the capture
