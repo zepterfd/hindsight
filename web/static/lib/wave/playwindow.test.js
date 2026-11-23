@@ -33,3 +33,23 @@ test('of reads the API trim', () => {
   assert.equal(PlayWindow.of({ trim: null }).clipped, false);
   assert.equal(PlayWindow.of({}).clipped, false);
 });
+
+const skipping = new PlayWindow({ start: 100, end: 200 }, { skip: true });
+
+test('skipping a selection plays the whole take and jumps from In to Out', () => {
+  assert.equal(skipping.clipped, false, 'the whole take is the window');
+  assert.equal(skipping.opening, 0);
+  assert.equal(skipping.finished(1e9), false);
+  assert.equal(skipping.jump(99), null);
+  assert.equal(skipping.jump(100), 200);
+  assert.equal(skipping.jump(150), 200, 'a seek into the section is moved on too');
+  assert.equal(skipping.jump(199), 200);
+  assert.equal(skipping.jump(200), null);
+});
+
+test('without skip, or without a selection, nothing is jumped', () => {
+  assert.equal(clipped.jump(150), null);
+  assert.equal(whole.jump(150), null);
+  assert.equal(new PlayWindow(null, { skip: true }).jump(150), null);
+  assert.equal(new PlayWindow(null, { skip: true }).skip, false, 'nothing to skip is not skipping');
+});

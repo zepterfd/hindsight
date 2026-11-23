@@ -1492,6 +1492,10 @@ dialog.sheet::backdrop { background: var(--scrim); }
 }
 /* Clear forgets the selection, nothing more: not styled as dangerous. */
 .sel-clear { color: var(--ink-dim); font-size: 13px; padding: 8px 4px; }
+/* Skip it is a switch, drawn as the other text buttons here: lit when on. */
+.sel-skip { color: var(--ink-dim); font-size: 13px; padding: 8px 4px; }
+.sel-skip[aria-pressed="true"] { color: var(--warn); text-decoration: underline; }
+.sel-skip:disabled { opacity: 0.4; }
 /* display: block, so the label truncates with an ellipsis rather than
    spilling: a centred flex label never truncates. */
 .tb-row.verbs .icon-btn { flex: 1 1 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 8px; display: block; line-height: 42px; text-align: center; }

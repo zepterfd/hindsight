@@ -1681,6 +1681,7 @@ has no tip.
 | Downbeat ◂ ▸ | Move the downbeat by 10 ms, or by the Snap step with Snap on. It stays here once the take has a tempo |
 | Downbeat time | Tap to place the downbeat exactly, in the editor |
 | Set to playhead | Put the downbeat where the playhead is |
+| Skip it | Play the rest of the take and leave the selection out: playback jumps from In to Out, to hear the pieces either side run together. Off while Repeat is on |
 | Clear | Forget the selection. The take itself is untouched |
 | In / Out time | Tap to place it exactly: the view centres on it and the editor opens. Tap the ruler's "1" to place the downbeat |
 | Done | Close the editor. Esc does too |

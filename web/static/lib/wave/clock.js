@@ -62,6 +62,22 @@ export class Clock {
         const p = this.position();
         if (p >= this.loop.end || p < this.loop.start) this.audio.currentTime = this.loop.start / this.sr;
       }
+      // Skipping the selection: reaching In goes on from Out. At the end of
+      // the take there is nothing past Out, so that is the end.
+      if (this.engine === 'preview' && !this.loop) {
+        const to = this.playWindow().jump(this.position());
+        if (to !== null) {
+          const end = this.audio.duration;
+          if (Number.isFinite(end) && to / this.sr >= end) {
+            this.pause();
+            this.audio.currentTime = end;
+            this.onTick?.(this.position());
+            this.onEnded?.();
+            return false;
+          }
+          this.audio.currentTime = to / this.sr;
+        }
+      }
       // Not looping, the selection is the take: playing stops at Out.
       if (this.engine === 'preview' && !this.loop && this.playWindow().finished(this.position())) {
         this.pause();
