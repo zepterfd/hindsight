@@ -24,6 +24,8 @@ internet.
 | `POST /api/take/flags?file=` | Add one flag to a take |
 | `PATCH /api/take/flags?file=&id=` | Move or relabel one flag |
 | `DELETE /api/take/flags?file=&id=` | Remove one flag |
+| `GET /api/take/analysis?file=` | The analyses a take holds (`sections`, each wrapped: version, when, result or error) and the ones this Pi can run (`available`) |
+| `POST /api/take/analyze?file=&kind=` | Run one analysis of one take now, in the background: 202, 404 for an unknown kind, 409 if it is already under way, 501 if the Pi has none set up |
 | `POST /api/take/undo?file=[&op=]` | Undo the newest change to a take, or the one named |
 | `GET /api/trash` | Deleted and pruned takes, most recently deleted first |
 | `POST /api/trash/restore?file=` | Put a take back from the trash, starred |

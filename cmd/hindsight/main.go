@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gabeduke/hindsight/internal/analyze"
 	"github.com/gabeduke/hindsight/internal/api"
 	"github.com/gabeduke/hindsight/internal/audio"
 	"github.com/gabeduke/hindsight/internal/bundle"
@@ -225,6 +226,22 @@ func main() {
 		kb.Start()
 		stops = append(stops, srvAPI.StopKeyboard, kb.Stop)
 		controllers.SetControlSink(srvAPI)
+	}
+	// What a person said or played in a take, worked out in the background
+	// while the rig is idle and kept beside the take (internal/analyze). Off
+	// when this build has no analysis the config asks for.
+	if as := analyzers(cfg); len(as) > 0 {
+		actx, stopAnalyse := context.WithCancel(context.Background())
+		stops = append(stops, stopAnalyse)
+		takes := audio.NewTakeList(cfg.OutputDir)
+		runner := &analyze.Runner{
+			Dir: cfg.OutputDir, Analyzers: as,
+			Takes: func() ([]audio.Take, error) { ts, _, err := takes.List(); return ts, err },
+			Idle:  func() bool { return srvAPI.Busy() == "" },
+		}
+		srvAPI.SetAnalyzer(actx, runner)
+		go runner.Run(actx)
+		log.Printf("[*] analysis on — %v", runner.Keys())
 	}
 	// The hub: a public HTTPS name for this Pi's LAN address, and Caddy's
 	// certificate for it on a loopback listener of its own -- never a route

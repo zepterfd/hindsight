@@ -17,7 +17,7 @@ func takeWithSidecars(t *testing.T, dir, name string) string {
 	if err := WriteMeta(wav, Meta{Label: "keeper", Flags: []Flag{{ID: "r00000001", Frame: 3}}}); err != nil {
 		t.Fatal(err)
 	}
-	for _, p := range []string{previewPath(wav), peaksPath(wav), pyramidPath(wav), MIDIPath(wav), ManifestPath(wav)} {
+	for _, p := range []string{previewPath(wav), peaksPath(wav), pyramidPath(wav), MIDIPath(wav), ManifestPath(wav), AnalysisPath(wav)} {
 		os.WriteFile(p, []byte("x"), 0o644)
 	}
 	if _, err := RecordHistory(wav, Meta{}, Meta{Label: "keeper"}, time.Now(), ""); err != nil {
