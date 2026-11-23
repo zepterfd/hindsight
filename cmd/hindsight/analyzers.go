@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gabeduke/hindsight/internal/analyze"
 	"github.com/gabeduke/hindsight/internal/config"
+	"github.com/gabeduke/hindsight/internal/similar"
 )
 
 // analyzers is every analysis this build can run on a take, in the order a
@@ -12,5 +13,8 @@ import (
 // runs nothing and shows no button for it.
 func analyzers(cfg *config.Config) []analyze.Analyzer {
 	var as []analyze.Analyzer
+	if cfg.AnalyzeHarmony {
+		as = append(as, similar.Analyzer{})
+	}
 	return as
 }

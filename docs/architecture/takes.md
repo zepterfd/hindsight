@@ -189,6 +189,24 @@ reaches every open page as any other change to a take.
 exist is the binary's (`cmd/hindsight/analyzers.go`); an analyser that needs
 configuration is left out when it has none.
 
+### Takes that play alike (`internal/similar`)
+
+The `harmony` section is a take's chord fingerprint: its chords in order (a
+triad per frame from a 4096-point chroma, median-smoothed, runs under three
+frames dropped), its **moves** (how often one chord followed another, by the
+root's step up and the two qualities: independent of the key), its mean
+pitch-class profile and a best-guess key. `similar.Score` is half the moves'
+cosine and half the profile's, the profile compared in whichever of twelve
+transpositions fits, so the same song a fifth up scores as the same. A take
+with fewer than three chord changes (a drone, a noise wash) matches nothing.
+`Groups` is complete linkage: a take joins a group only if it is alike to
+*every* take in it, so a chain of takes each a little different from the next
+is not one group. The two endpoints read stored fingerprints and never audio.
+
+It is a proof of concept: triads only (no sevenths), the key is a label (I-V-vi-IV
+fits C and Am equally; the tonic chord's weight picks), and melody is not
+compared at all. `ANALYZE_HARMONY=false` turns it off.
+
 ## Shares queue
 
 `GET /api/render` runs ffmpeg. Two at once on a Pi compete with the capture

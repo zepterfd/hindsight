@@ -45,6 +45,7 @@ the settings on this page and the tape's own (`docs/api.md`, `GET /api/rig`).
 | `MAX_SAVES` | `0` | Keep at most this many takes, moving the oldest to the trash. `0` disables pruning |
 | `INPUT_LATENCY_MS` | `100` | Input latency requested from PortAudio. Do not lower it |
 | `MIDI_CAPTURE` | `true` | Record MIDI from every connected device and write a `.mid` beside each take |
+| `ANALYZE_HARMONY` | `true` | Fingerprint each take's chord progression, in the background while the rig is idle, so takes that play alike can be found (`docs/architecture/takes.md`, *Analysis*) |
 | `MIDI_CLOCK_DEVICE` | *(`DEVICE_MATCH`, or the interface's card name under `auto`)* | Substring naming the device whose MIDI clock is the tempo source |
 | `MIDI_IGNORE` | *(empty)* | Comma-separated substrings; matching MIDI devices are never opened |
 | `MIDI_LATENCY_MS` | `0` | Milliseconds added to every MIDI event before it is placed against the audio |
