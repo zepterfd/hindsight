@@ -66,10 +66,10 @@ spool the sender drains) and is the first thing to add once the box exists.
 
 ## "A whole session"
 
-The phone protocol has a length limit (`audio.PhoneMaxSeconds`). A session
-longer than that is several takes in a row: the sender stops and restarts
-with a new id when the Pi ends a take with reason `limit`. **That rollover is
-not built**; `Run` returns at the first limit.
+The phone protocol caps a recording at three hours (`audio.PhoneMaxSeconds`),
+which holds a rehearsal. A longer one would be several takes in a row: the
+sender restarts with a new id when the Pi ends a take with reason `limit`.
+That rollover is not built; `Run` returns at the first limit.
 
 ## Where it joins the network
 
@@ -86,7 +86,7 @@ only, through the hub or Tailscale (`docs/plan/tailscale-routing.md`).
 1. **Prototype the buffer + ADC on a bench** with a Pi Zero 2 W and any I²S
    codec board; record a guitar; compare the tap's recording to the amp's
    sound for tone and noise floor. This is the part that can fail.
-2. A **session rollover** in `phoneclient` (above).
+2. A **session rollover** in `phoneclient` (above), if a session ever runs past three hours.
 3. A **spool** for long outages.
 4. A case, a jack pair, a clip LED, and a pairing story (how the box learns
    the Pi's address: a config file on the SD card is enough).
