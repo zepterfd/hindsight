@@ -16,6 +16,7 @@ import { icon } from './ui/icons.js';
 import { layersOf } from './ui/layers.js';
 import { menu, menuItem } from './ui/menu.js';
 import { latencyOn, forgetRetired } from './play/flag.js';
+import { cueOn } from './cue/pref.js';
 
 const TABS = [
   // The Studio's href is the tape page's while the tape is on.
@@ -159,6 +160,8 @@ export function initNav(doc = document, env = {}) {
   forgetRetired(store);
   // The latency overlay, on a device that asked for it (lib/device-prefs.js).
   if (latencyOn()) import('./play/latency.js').then((m) => m.mountOverlay(doc, { fetchFn: get })).catch(() => {});
+  // Cue words ("hindsight flag"), on a device that asked for them: loaded only then.
+  if (cueOn()) import('./cue/mount.js').then((m) => m.mountCue({ fetchImpl: get })).catch(() => {});
   const apply = (tapeOn) => {
     const tabs = navTabs(loc.pathname, tapeOn);
     for (const a of nav.querySelectorAll('a[data-tab]')) {

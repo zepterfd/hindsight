@@ -13,6 +13,7 @@
 
 import { latencyOn, setLatencyOn } from './play/flag.js';
 import { listOn, setListOn } from './room/library.js';
+import { cueOn, setCueOn } from './cue/pref.js';
 
 /**
  * Each toggle: a stable id, `feature` when it is a preview (it is drawn up
@@ -30,6 +31,15 @@ export const DEVICE_PREFS = [
     reload: false,
     get: listOn,
     set: setListOn,
+  },
+  {
+    id: 'cue-words',
+    feature: true,
+    label: 'Cue words',
+    note: 'Say "Hindsight note" or "Hindsight song A" and this device marks that moment. Listens through this device\'s microphone while a page is open; the browser\'s speech service hears it, which for Chrome and Safari means their vendor\'s servers. Off until you turn it on.',
+    reload: true, // lib/nav.js mounts it as the page loads
+    get: cueOn,
+    set: setCueOn,
   },
   {
     id: 'latency',
