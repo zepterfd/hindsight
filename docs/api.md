@@ -26,6 +26,7 @@ internet.
 | `DELETE /api/take/flags?file=&id=` | Remove one flag |
 | `GET /api/take/analysis?file=` | The analyses a take holds (`sections`, each wrapped: version, when, result or error) and the ones this Pi can run (`available`) |
 | `POST /api/take/analyze?file=&kind=` | Run one analysis of one take now, in the background: 202, 404 for an unknown kind, 409 if it is already under way, 501 if the Pi has none set up |
+| `GET /api/take/captions?file=` | The take's captions as WebVTT (`text/vtt`); 404 until the `captions` analysis has run, or if it failed. Only on a Pi set up for it (`TRANSCRIBE_URL`) |
 | `POST /api/take/undo?file=[&op=]` | Undo the newest change to a take, or the one named |
 | `GET /api/trash` | Deleted and pruned takes, most recently deleted first |
 | `POST /api/trash/restore?file=` | Put a take back from the trash, starred |
