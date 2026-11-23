@@ -114,6 +114,7 @@ export const TIPS = [
   { control: 'Downbeat ◂ ▸', ids: ['db-nudge'], tip: 'Move the downbeat by 10 ms, or by the Snap step with Snap on. It stays here once the take has a tempo' },
   { control: 'Downbeat time', ids: ['db-open'], tip: 'Tap to place the downbeat exactly, in the editor' },
   { control: 'Set to playhead', ids: ['db-set'], tip: 'Put the downbeat where the playhead is' },
+  { control: 'Skip it', ids: ['skip'], tip: 'Play the rest of the take and leave the selection out: playback jumps from In to Out, to hear the pieces either side run together. Off while Repeat is on' },
   { control: 'Clear', ids: ['clear'], tip: 'Forget the selection. The take itself is untouched' },
   { control: 'In / Out time', ids: ['be-open'], tip: 'Tap to place it exactly: the view centres on it and the editor opens. Tap the ruler\'s "1" to place the downbeat' },
   { control: 'Done', ids: ['be-done'], tip: 'Close the editor. Esc does too' },

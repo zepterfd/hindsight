@@ -77,3 +77,52 @@ test('with a selection, Play begins at In and the clock stops at Out', async () 
     globalThis.Audio = saved;
   }
 });
+
+test('skipping the selection, playback that reaches In goes on from Out, and the take end ends it', async () => {
+  const saved = globalThis.Audio;
+  class FakeAudio {
+    constructor() { this.currentTime = 0; this.duration = 10; this.playbackRate = 1; this.defaultPlaybackRate = 1; }
+    addEventListener() {}
+    play() { return Promise.resolve(); }
+    pause() {}
+  }
+  globalThis.Audio = FakeAudio;
+  try {
+    const { Clock } = await import('./clock.js');
+    const { PlayWindow } = await import('./playwindow.js');
+    let ended = 0;
+    let region = { start: 2000, end: 4000 };
+    const c = new Clock({ previewUrl: '', sampleRate: 1000, file: 'x.wav', onEnded: () => ended++,
+      playWindow: () => new PlayWindow(region, { skip: true }) });
+    await c.play();
+    assert.equal(c.audio.currentTime, 0, 'skipping, Play still begins at the top');
+    c.audio.currentTime = 1.5;
+    c.frames.fn();
+    assert.equal(c.audio.currentTime, 1.5, 'before In nothing moves');
+    c.audio.currentTime = 2.0;
+    c.frames.fn();
+    assert.equal(c.audio.currentTime, 4, 'at In it goes on from Out');
+    c.audio.currentTime = 3;
+    c.frames.fn();
+    assert.equal(c.audio.currentTime, 4, 'a seek into the section is moved on');
+    assert.equal(ended, 0);
+
+    // Out at the end of the take: nothing is left to play.
+    region = { start: 8000, end: 10000 };
+    c.audio.currentTime = 8.5;
+    c.frames.fn();
+    assert.equal(ended, 1, 'the take ends');
+    assert.equal(c.playing, false);
+
+    // A loop is its own thing: it is not skipped.
+    region = { start: 2000, end: 4000 };
+    c.loop = { start: 2000, end: 4000 };
+    c.playing = true;
+    c.audio.currentTime = 2.5;
+    c.frames.fn();
+    assert.equal(c.audio.currentTime, 2.5);
+    c.pause();
+  } finally {
+    globalThis.Audio = saved;
+  }
+});

@@ -181,6 +181,7 @@ async function main() {
     cursor: PlayWindow.of(take).opening, // a take opens at In, ready to play its selection
     selectedFlag: null,
     loop: false, // off on every open (editing model, decision 1)
+    skip: false, // play around the selection instead of through it; off on every open too
     // The boundary being edited, if any: { edge: 'start' | 'end' | 'downbeat',
     // seam, side } -- see "the boundary editor" below. The view reads it.
     edit: null,
@@ -235,7 +236,7 @@ async function main() {
   const clock = new Clock({
     previewUrl,
     sampleRate: sr, file,
-    playWindow: () => new PlayWindow(state.region),
+    playWindow: () => new PlayWindow(state.region, { skip: state.skip }),
     onTick: (frame) => {
       state.cursor = frame;
       // Keep the playhead in view while it plays, unless a finger is busy.
@@ -690,6 +691,10 @@ async function main() {
     $('be-play').setAttribute('aria-label', playing ? 'Pause' : 'Play from here');
     $('loop').setAttribute('aria-pressed', String(state.loop));
     $('loop').disabled = !state.region && !state.loop;
+    // Skip leaves the selection out of playback. A loop is the selection by
+    // definition, so while Repeat is on there is nothing to skip.
+    $('sel-skip').setAttribute('aria-pressed', String(state.skip));
+    $('sel-skip').disabled = state.loop;
     updateReadout();
     // The sample-exact loop runs at 1×; practice speed is for the preview.
     const speedOff = state.loop && !!state.region;
@@ -778,6 +783,11 @@ async function main() {
     redraw();
   }
   $('sel-clear').addEventListener('click', clearSelection);
+  // Skip it: play the rest of the take, leaving the selection out.
+  $('sel-skip').addEventListener('click', () => {
+    state.skip = !state.skip;
+    syncTransport();
+  });
   const nudge = (edge, sign) => () => {
     if (!state.region) return;
     const r = { ...state.region };
