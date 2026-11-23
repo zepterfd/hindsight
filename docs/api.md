@@ -37,6 +37,8 @@ internet.
 | `GET /api/download?file=[&dl=1]` | Stream inline, or force a download |
 | `DELETE /api/delete?file=` | Move a take and its sidecars to the trash |
 | `POST /api/cut?file=` | Export a region of a take as a new take, with 3ms declick fades |
+| `GET /api/take/silence?file=` | Where a take's long silences are, and how much shorter it would be; writes nothing |
+| `POST /api/take/trim-silence?file=` | Write the take again without its long silences, as a new take |
 | `GET /api/slice?file=&from=&to=` | A region as a 16-bit WAV with the same fades a cut gets, for auditioning |
 | `GET /api/render?file=&from=&to=` | An MP3 of a region, streamed from ffmpeg with the cut's fades, for the share sheet (`&normalize=1`: levelled) |
 | `GET /api/level?file=&from=&to=` | A region's peak, and the gain Normalize would give it |
@@ -928,6 +930,43 @@ sounding at its end closed there. Its manifest carries a `source` block naming
 the take and frames it came from, and its `downbeat` is the first bar line of
 the source at or after the region's start — reported, not aligned, since the
 region was chosen by ear rather than by the grid.
+
+## `GET /api/take/silence?file=`
+
+Optional query: `min_seconds` (shortest silence worth removing, default 15),
+`keep_seconds` (left of each silence, default 1) and `threshold_db` (level
+under which a 20 ms window is silent, below zero; default is found from the
+take, between -75 and -45). Writes nothing.
+
+Response: `200 {"runs": [{"start_frame": 240000, "end_frame": 1200000}],
+"threshold_db": -62.5, "removed_seconds": 19, "seconds": 30}`.
+
+| Status | When |
+|---|---|
+| 400 | Bad `file`, a value that is not a number, a negative duration, or a threshold above 0 |
+| 404 | No such take |
+| 422 | The take is not 32-bit |
+
+## `POST /api/take/trim-silence?file=`
+
+Body (optional): `{"min_seconds": 15, "keep_seconds": 1, "threshold_db": -60}`,
+as above. Writes the take without its silences as a new take
+`jam_<now>.wav`, labelled `"<source label or stem> · no gaps"`, with the
+cut's declick fades at each join and the source's flags moved to match (see
+*Removing silence* in `architecture/takes.md`). The source is never modified.
+The preview mp3 is rendered in the background and `MAX_SAVES` is enforced
+afterwards, sparing the new take and the one it came from.
+
+Response: `200 {"name": "jam_2026-11-23_090000.wav", "report": {...}}`, the
+report as above.
+
+| Status | When |
+|---|---|
+| 400 | As above, or a malformed body |
+| 404 | No such take |
+| 409 | No silence long enough to remove |
+| 422 | The take is not 32-bit |
+| 507 | Below `MIN_FREE_GB` |
 
 ## `GET /api/slice?file=&from=&to=`
 
