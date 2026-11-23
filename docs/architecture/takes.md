@@ -189,6 +189,28 @@ reaches every open page as any other change to a take.
 exist is the binary's (`cmd/hindsight/analyzers.go`); an analyser that needs
 configuration is left out when it has none.
 
+### What a take sounds like (`internal/instrument`)
+
+The `instruments` section holds `{model, guesses: [{label, score}], features}`:
+labels from *percussion, bass, chords, lead, ambience, silence*, up to three
+at 0.5 or better, and the numbers they were read from. A take is read at
+about 12 kHz mono (`internal/dsp`), a 1024-point spectrum every 512
+samples, and described by its centroid, the share of energy under 250 Hz,
+its flatness, how many partials stand out, how often something starts (a
+rise in level, not only a change of spectrum, so steady noise starts
+nothing), how much of one frame survives into the next, and a
+harmonic/percussive split by median filtering. The split is what lets a kit
+be heard under a bass line, which the bass's energy hides from every plain
+average; it is taken again above 1.5 kHz, energy-weighted.
+
+It **is a proof of concept.** `instrument.Rules` is hand-set thresholds, set
+against synthetic instruments, and it says what a take sounds like, not what
+was plugged in (a guitar played as chords is *chords*). `instrument.Classifier`
+is the seam a trained model goes behind: it is given the same `Features`, and
+its `Name` is stored with its guesses. The features are kept beside every
+verdict so the thresholds can be tuned, or a model trained, from real takes.
+`ANALYZE_INSTRUMENTS=false` turns it off.
+
 ## Shares queue
 
 `GET /api/render` runs ffmpeg. Two at once on a Pi compete with the capture
