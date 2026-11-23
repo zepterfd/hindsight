@@ -20,6 +20,7 @@ import { parseBpm, tagOf, familyCounts, familySticker, cutsBack, freedBy } from 
 import { takeTitle } from '/lib/rooms/takename.js';
 import { icon } from '/lib/ui/icons.js';
 import { GESTURE } from '/lib/ui/press.js';
+import { menu as popMenu, menuItem, menuRows } from '/lib/ui/menu.js';
 import { saveFile } from '/lib/wave/share.js';
 
 /** setStripe puts one printed stripe on a spine, in place of the one it wore. */
@@ -73,7 +74,7 @@ export class TakesList {
    * takes is the page's takes (lib/models/takes.js), where the list comes
    * from: the list never asks /api/jams itself. Without one it makes its own.
    */
-  constructor(container, emptyEl, { takes = null, onToast, onListChange, onSelectChange, onSelected, touchHold = false, showFolded = false, selectBar, shape, stepOrder = 'shown', spines = false, spineAction = 'pick', onSpineHold, onPlay, onEnded, audioFor = null, openKey = false, newFor = 0 }) {
+  constructor(container, emptyEl, { takes = null, onToast, onListChange, onSelectChange, onSelected, touchHold = false, showFolded = false, selectBar, shape, stepOrder = 'shown', spines = false, spineAction = 'pick', onSpineHold, onPlay, onEnded, audioFor = null, openKey = false, moreKey = false, layers = null, newFor = 0 }) {
     // A take starting, and playing to its end: the page's now-playing bar hears of both.
     // Settles with the first list the Pi answers (bar/handoff.js waits for it).
     this.loaded = new Promise((resolve) => { this.markLoaded = resolve; });
@@ -90,6 +91,10 @@ export class TakesList {
     this.spines = spines;
     this.spineAction = spineAction;
     this.openKey = openKey;
+    // A ⋯ at each row's end, before the ›: quick actions on that take
+    // (rowActions), for the List, where the other way to them is Open.
+    this.moreKey = moreKey;
+    this.layers = layers;
     this.newFor = newFor;
     if (spines && spineAction === 'play') {
       const act = (row) => {
@@ -368,7 +373,8 @@ export class TakesList {
         </div>
         <div class="wave pending" aria-hidden="true"></div>
         <span class="spine-led" aria-hidden="true"></span>
-      </span>${this.openKey ? `
+      </span>${this.moreKey ? `
+      <button class="spine-more" type="button" data-tip="row-more" aria-label="More">⋯</button>` : ''}${this.openKey ? `
       <a class="spine-open" data-tip="open">${icon('right', { size: 20 })}</a>` : ''}
       <div class="take-actions" hidden>
         <button class="icon-btn play" type="button">Play</button>
@@ -408,6 +414,7 @@ export class TakesList {
       // The spine is the control: its parts are print on the J-card.
       el.classList.add('spine', 'sinks'); // and it sinks under a finger (lib/ui/keys.js)
       if (this.openKey) el.classList.add('opens'); // its › beside it
+      if (this.moreKey) el.classList.add('mores'); // and its ⋯ before that
       setStripe(el, stripeFor(t, tagStore.list));
       el.tabIndex = 0;
       el.setAttribute('role', 'button');
@@ -432,6 +439,7 @@ export class TakesList {
       midiEl: el.querySelector('.midi'),
       delBtn: el.querySelector('.del'),
       openKey: el.querySelector('.spine-open'),
+      moreEl: el.querySelector('.spine-more'),
       ws: null,
       audio: null,
       mounting: false,
@@ -441,6 +449,7 @@ export class TakesList {
 
     row.playBtn.addEventListener('click', () => this.togglePlay(row));
     row.delBtn.addEventListener('click', () => this.deleteTake(row));
+    if (row.moreEl) this.wireMore(row);
     this.wireSelect(row);
 
     // Attached once, here, rather than in mountWave: mountWave can run more
@@ -644,6 +653,7 @@ export class TakesList {
     row.ws?.setSelection(t.trim, (t.duration_seconds || 0) * sr);
     row.dlEl.href = `/api/download?file=${encodeURIComponent(t.name)}&dl=1`;
     row.openEl.href = `/wave.html?file=${encodeURIComponent(t.name)}`;
+    if (row.moreEl) row.moreEl.setAttribute('aria-label', `More for ${takeTitle(t)}`);
     if (row.openKey) {
       row.openKey.setAttribute('href', `/wave.html?file=${encodeURIComponent(t.name)}`);
       row.openKey.setAttribute('aria-label', `Open ${takeTitle(t)}`);
@@ -959,6 +969,55 @@ export class TakesList {
     await this.mountWave(row);
     if (!row.ws) return null;
     return { audio: row.audio, peaks: row.peaks, toggle: () => this.togglePlay(row) };
+  }
+
+  /**
+   * rowActions is what the ⋯ on a row offers, for take `row`: Play or Pause,
+   * Star, Open and the WAV, then Delete, last and red, after a line. Delete
+   * goes to the trash with its Undo, as a row's own Delete does, so it asks
+   * nothing first. Each is the row's own control pressed, so a menu pick and
+   * a press on the row cannot disagree. Pure of the DOM but for the items.
+   */
+  rowActions(row, doc = document) {
+    const t = row.data;
+    const playing = !!row.ws?.isPlaying();
+    const item = (word, run, opts = {}) => {
+      const el = menuItem(doc, { word, ...opts });
+      el.addEventListener('click', () => run());
+      return el;
+    };
+    const rows = [
+      item(playing ? 'Pause' : 'Play', () => {
+        if (!t.has_preview) { this.onToast?.('Still encoding — a moment', 'warn'); return; }
+        this.togglePlay(row);
+      }),
+      item(t.starred ? 'Unstar' : 'Star', () => row.starBtn.click()),
+      item('Open', () => row.openKey?.click() ?? row.openEl.click()),
+      item('Download WAV', () => row.dlEl.click()),
+      item('Delete', () => this.deleteTake(row), { danger: true }),
+    ];
+    return menuRows(doc, [rows]);
+  }
+
+  // The row's ⋯: a menu of rowActions, one panel for every row (a menu
+  // shows one at a time), in the top layer so a scrolling list can't clip it.
+  wireMore(row) {
+    if (!this.moreMenuEl) {
+      const panel = document.createElement('div');
+      panel.className = 'menu';
+      panel.setAttribute('role', 'menu');
+      panel.hidden = true;
+      document.body.append(panel);
+      this.moreMenuEl = panel;
+    }
+    const key = row.moreEl;
+    row.more = popMenu(key, this.moreMenuEl, {
+      layers: this.layers || undefined,
+      popover: true,
+      render: (panel) => panel.replaceChildren(...this.rowActions(row)),
+    });
+    // A tap on the key is the key's, not the row's: it never plays or picks.
+    for (const ev of ['pointerdown', 'pointerup', 'click', 'dblclick']) key.addEventListener(ev, (e) => e.stopPropagation());
   }
 
   /** deleteByName deletes a shown take, with the row's Undo. */
