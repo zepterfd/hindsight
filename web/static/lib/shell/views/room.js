@@ -449,6 +449,10 @@ export const roomView = {
 
     let roomInst = null;
     ctx.engine.setFind?.(takesFinder(takes));
+    // ▶ in the bar with the tape in it plays the take being selected, the first
+    // picked, rather than the tape (lib/models/engine.js, playPause).
+    // Only while the room is the one shown: the Studio's ▶ is the tape's.
+    ctx.engine.setChosen?.(() => (ctx.active() && takes.selecting && takes.selected.size ? [...takes.selected][0] : null));
     // The notes drawer is the shell's (boot.js): what it changes on a take
     // (its notes, name, ★, tag) is fetched again here, now if the room is
     // shown, else when it next is.

@@ -62,6 +62,9 @@ export function createEngine({ tapes, takes: pageTakes = null, tape: pageTape = 
   // A press of the bar's the Pi refused: why, in its words.
   const refused = (e) => onToast?.(`The tape: ${e.recording ? `${e.message}. ${e.detail}` : e.message}`, 'bad');
   let find = initFind, onNote = initOnNote, go = initGo;
+  // chosen answers the name of the take the person has chosen by selecting it
+  // in the room, or null: set by the room (setChosen), for ▶ below.
+  let chosen = null;
   let feed = null, tape = null, take = null; // take: { name, audio, src }
   let stream = null; // the tape on this phone, joined again from the page before
   let current = null; // the source in the bar
@@ -280,6 +283,23 @@ export function createEngine({ tapes, takes: pageTakes = null, tape: pageTape = 
     return take ? take.src : null;
   }
   const touch = () => { touches++; handoff.touch(); };
+  /**
+   * playChosen puts the take chosen by selecting it in the bar and plays it,
+   * from the page's own row when it holds it (the row, the spine and the bar
+   * are then one player), else from the engine's own.
+   */
+  async function playChosen(name) {
+    touch();
+    const found = find ? await find(name) : await findTakeByName(name);
+    if (!found || found === 'missing') {
+      onToast?.('That take can’t play yet: it is still being saved', 'warn');
+      return;
+    }
+    if (feed && feed.playing()) feed.pause();
+    loadTake(found.t, found.player);
+    if (take && !take.src.playing()) take.src.play();
+    kick();
+  }
   /** pickSource is a pick from the source menu: the tape, the feed, or a take, which plays. */
   async function pickSource(id) {
     touch();
@@ -403,6 +423,7 @@ export function createEngine({ tapes, takes: pageTakes = null, tape: pageTape = 
     audioFor,
     setFind: (fn) => { find = fn; if (fn) findWait?.(); },
     setOnNote: (fn) => { onNote = fn; },
+    setChosen: (fn) => { chosen = fn; },
     backToTape,
     /** eject is ⏏: the tape back in the bar, by hand, so it stays until a take is picked by hand. */
     eject: () => backToTape({ byHand: true }),
@@ -485,6 +506,12 @@ export function createEngine({ tapes, takes: pageTakes = null, tape: pageTape = 
     playPause() {
       const s = current;
       if (!s) return;
+      // A take chosen by selecting it is not in the bar (selecting loads
+      // nothing), so ▶ would play the tape: its reels turn, and the take
+      // chosen stays silent. Played from the tape, ▶ plays the chosen take.
+      // Not while the tape plays: then ▶ is its pause.
+      const pick = s.kind === 'tape' && !s.playing() ? chosen?.() : null;
+      if (pick) { playChosen(pick); return; }
       if (!s.playing() && !s.waiting?.() && !s.canPlay()) return;
       touch();
       if (!s.press?.()) {
@@ -555,6 +582,7 @@ export function createEngine({ tapes, takes: pageTakes = null, tape: pageTape = 
     takes,
     setFind: api.setFind,
     setOnNote: api.setOnNote,
+    setChosen: api.setChosen,
     setGo: (fn) => { go = fn; },
     // A tape made after the engine was (the first one a Pi gets, from the
     // Studio): the engine holds it from here on.
