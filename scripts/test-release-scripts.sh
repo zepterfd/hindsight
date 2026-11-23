@@ -181,4 +181,16 @@ for kept in settings.json hindsight.env bin jam_saves tapes tls releases update.
   check "a deploy keeps the Pi's $kept" "yes" "$(kept_by_deploy "$kept")"
 done
 
+# tailscale-serve.sh proxies Hindsight's port on 443 to the tailnet only (serve,
+# never funnel), and refuses a port that is not a number.
+TS="$HERE/tailscale-serve.sh"
+check "tailscale-serve proxies the default port" \
+  "tailscale serve --bg --https=443 http://127.0.0.1:5000 " "$("$TS" --dry-run)"
+check "tailscale-serve follows PORT" \
+  "tailscale serve --bg --https=443 http://127.0.0.1:8080 " "$(PORT=8080 "$TS" --dry-run)"
+check "tailscale-serve --off turns it off" \
+  "tailscale serve --https=443 off " "$("$TS" --off --dry-run)"
+check "tailscale-serve never funnels" "0" "$(grep -c 'funnel' <(grep -v '^#' "$TS") || true)"
+check "tailscale-serve refuses a port that isn't a number" "2" "$(PORT='5000;x' "$TS" --dry-run >/dev/null 2>&1; echo $?)"
+
 exit "$fail"

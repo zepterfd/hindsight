@@ -13,6 +13,7 @@ internal/mono          the one monotonic clock audio and MIDI both stamp with
 internal/tempo         the tempo a take was played at, measured from its audio
 internal/tape          the tape: model and undo, store and pool, renderer, transport, player, catching, cue lane, latency in use
 internal/rig           the kit drawn as hardware: device profiles, sockets, cables
+internal/tailnet        whether this Pi is on a Tailscale network, and its MagicDNS name (reads the tailscale CLI)
 internal/hub           the Pi's side of the hub
 internal/hubserver     the hub itself
 internal/api           HTTP and WebSocket handlers; the verbs every surface presses (verbs.go)
