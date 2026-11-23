@@ -11,6 +11,7 @@ internal/smf           Standard MIDI File writer and reader
 internal/bundle        writes a take's .mid and manifest from audio's window and midi's events
 internal/mono          the one monotonic clock audio and MIDI both stamp with
 internal/tempo         the tempo a take was played at, measured from its audio
+internal/activity      the Listening Room's feed: sessions, themes, on this day, suggestions (pure, from the take list)
 internal/tape          the tape: model and undo, store and pool, renderer, transport, player, catching, cue lane, latency in use
 internal/rig           the kit drawn as hardware: device profiles, sockets, cables
 internal/hub           the Pi's side of the hub

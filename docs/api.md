@@ -17,6 +17,7 @@ internet.
 | `POST /api/trigger?seconds=N` | Save the last N seconds; `0` is the whole ring |
 | `POST /api/trigger?from=F[&to=T]` | Save any span of the ring, in absolute frames; no `to` is now |
 | `GET /api/jams` | Takes, starred first then newest first. Sends an ETag |
+| `GET /api/activity` | The feed: sessions, themes, "on this day", suggested next steps, and a strip of activity over time |
 | `GET /api/take?file=` | One take, in the same shape as an entry of `/api/jams` |
 | `PATCH /api/take?file=` | Edit a take's label, star, tag, trim, BPM, downbeat, lane kinds and flags |
 | `GET /api/tags` | The tags: `{"tags":[{"id","name","color"}]}`, `color` 1–8 a slot in the stripe palette |
@@ -578,6 +579,43 @@ and the live flags' `frame` are on.
 | 409 | Nothing is buffered, or the span is no longer (or not yet) in the ring |
 | 507 | Free space is below `MIN_FREE_GB`, even after emptying the trash |
 | 500 | The write itself failed |
+
+## `GET /api/activity`
+
+What happened in the room lately, grouped the way a person remembers it, made
+from the take list alone (`internal/activity`; nothing is read from disk but
+what the list already holds). Optional query: `tz` (the viewer's IANA zone,
+for what day a take was made on; default the Pi's), `days` (length of the
+strip, default 60, at most 365) and `per_card` (takes listed per card, default
+6, at most 50).
+
+```json
+{
+  "now": "2026-11-23T10:00:00-05:00", "zone": "America/New_York",
+  "cards": [
+    { "id": "session:2026-11-22T20:00", "kind": "session", "title": "Yesterday evening",
+      "subtitle": "3 takes, 4 min", "count": 3, "seconds": 210, "takes": ["jam_…wav", "…"], "at": "…" },
+    { "id": "on-this-day:2025", "kind": "on_this_day", "title": "On this day, 1 year ago", "…": "…" },
+    { "id": "tempo:96", "kind": "theme", "title": "Around 96 BPM", "bpm": 96, "…": "…" },
+    { "id": "suggest:label", "kind": "suggestion", "title": "Give these a name", "action": "label", "…": "…" }
+  ],
+  "days": [ { "date": "2026-11-23", "count": 2, "seconds": 90 } ]
+}
+```
+
+`kind` is one of: `session` (takes within 2 hours of each other, the last 14
+days, named for where the sitting began), `on_this_day` (the same date in an
+earlier year, up to ten back), `theme` (3 or more takes of the last 60 days
+that share a tag (`tag`) or a tempo within 3 BPM (`bpm`)) and `suggestion`
+(`action` `label`: a take of 10 s or more, an hour old, with no name of its
+own; `star`: marked twice or more and not starred; `trim_silence`: 5 minutes
+or longer with no selection). Cards are newest first within a kind, in the
+order sessions, on this day, themes, suggestions. `takes` is newest first and
+capped; `count` is the whole. `days` is oldest first, a quiet day a zero.
+
+Sends an ETag (the take list's, the zone, the day and the options), so a page
+that polls it costs the Pi nothing while nothing changes. 500 only if the
+list can't be read.
 
 ## `GET /api/jams`
 
