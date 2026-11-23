@@ -57,6 +57,7 @@ export const TIPS = [
   { control: 'Cuts', ids: ['detail-cuts'], tip: "The takes saved from parts of this one. They fold in here to keep the shelf short; tap one to see it" },
   { control: 'Earlier mixes', ids: ['detail-mixes'], tip: "This tape's earlier mixdowns. The newest stands on the shelf for them all; tap one to see it" },
   { control: '‹ (folded take)', ids: ['detail-up'], tip: "Back to the take this one is folded into on the shelf" },
+  { control: '⋯ (a take in the List)', ids: ['row-more'], tip: 'Quick actions on this take: play, star, open, download the WAV, delete (with Undo)' },
   { control: 'Open', ids: ['open'], tip: 'Open the take to select, loop, save or share part of it' },
   { control: '▶ Play all', ids: ['play-all'], tip: 'Play the takes shown, one after another, each from its In to its Out. Again to stop' },
   { control: 'Select', ids: ['select'], tip: 'Pick several takes to star, tag, export or delete together. Holding a take does the same: a finger or a pen holds, and a mouse uses ⇧-click' },

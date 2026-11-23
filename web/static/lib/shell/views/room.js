@@ -128,6 +128,9 @@ export const roomView = {
       spines: true,
       // Each row's › opens the take, and a take under a day old wears NEW.
       openKey: true,
+      // and its ⋯ before it: play, star, open, the WAV, and delete (decision 0045 note in the PR).
+      moreKey: true,
+      layers: ctx.layers,
       newFor: NEW_MS,
       audioFor: (t) => np.audioFor(t),
     });

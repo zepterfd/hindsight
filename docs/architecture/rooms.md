@@ -69,7 +69,7 @@ in `lib/room/doorway.js`):
   layer of its own (`.room-cassette-glow`). A shelf's **All ›** opens the
   List to it (`shelfNames`).
 - **The List** is `#takes` (`lib/takes.js`, the rack): by month and then by
-  day (`lib/shelf.js` `shelve`), each row a case with its **›** to Open,
+  day (`lib/shelf.js` `shelve`), each row a case with its **⋯** (quick actions: play, star, open, the WAV, and Delete last, with its Undo; `TakesList` `moreKey`, one panel on `lib/ui/menu.js`) and its **›** to Open,
   NEW for a day, the playing row ringed; *Recently deleted (n) ›* is its
   last row. A phone's library is the List.
 - **Shelf | List** is how this device sees the room, remembered in this

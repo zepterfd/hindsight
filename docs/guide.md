@@ -1626,6 +1626,7 @@ has no tip.
 | Cuts | The takes saved from parts of this one. They fold in here to keep the shelf short; tap one to see it |
 | Earlier mixes | This tape's earlier mixdowns. The newest stands on the shelf for them all; tap one to see it |
 | ‹ (folded take) | Back to the take this one is folded into on the shelf |
+| ⋯ (a take in the List) | Quick actions on this take: play, star, open, download the WAV, delete (with Undo) |
 | Open | Open the take to select, loop, save or share part of it |
 | ▶ Play all | Play the takes shown, one after another, each from its In to its Out. Again to stop |
 | Select | Pick several takes to star, tag, export or delete together. Holding a take does the same: a finger or a pen holds, and a mouse uses ⇧-click |
