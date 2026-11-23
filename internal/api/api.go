@@ -195,6 +195,8 @@ func (a *API) SetupRoutes(r *mux.Router) {
 	r.HandleFunc("/api/cut", a.handleCut).Methods(http.MethodPost)
 	r.HandleFunc("/api/flag", a.handleFlagPost).Methods(http.MethodPost)
 	r.HandleFunc("/api/flag", a.handleFlagDelete).Methods(http.MethodDelete)
+	r.HandleFunc("/api/catalog", a.handleCatalogGet).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc("/api/catalog/install", a.handleCatalogInstall).Methods(http.MethodPost)
 	r.HandleFunc("/api/download", a.handleDownload).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/api/peaks", a.handlePeaks).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/api/envelope", a.handleEnvelope).Methods(http.MethodGet, http.MethodHead)

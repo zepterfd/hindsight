@@ -106,6 +106,12 @@ type Config struct {
 	HubToken   string
 	HubTLSAddr string // the loopback listener Caddy asks for the certificate
 
+	// ProfilesDir holds rig profiles added after the release
+	// (internal/rig/catalog), data only; CatalogURL is where more are
+	// listed, off when empty. Env file only.
+	ProfilesDir string
+	CatalogURL  string
+
 	// SettingsFile is the app's settings.json (SETTINGS_FILE), and
 	// SettingsErr why it was not used, when it wasn't: Load then fell back to
 	// the environment alone. See settings.go.
@@ -159,6 +165,8 @@ func LoadFrom(get func(string) string) (*Config, error) {
 		TapeDemoAlign:      envBool(get, "TAPE_DEMO_ALIGN", false),
 		Port:               env(get, "PORT", "5000"),
 		UpdateRepo:         env(get, "UPDATE_REPO", "gabeduke/hindsight"),
+		ProfilesDir:        env(get, "PROFILES_DIR", filepath.Join(home, "hindsight", "profiles")),
+		CatalogURL:         strings.TrimSpace(get("CATALOG_URL")),
 		HubURL:             strings.TrimRight(strings.TrimSpace(get("HUB_URL")), "/"),
 		HubToken:           strings.TrimSpace(get("HUB_TOKEN")),
 		HubTLSAddr:         env(get, "HUB_TLS_ADDR", "127.0.0.1:5001"),

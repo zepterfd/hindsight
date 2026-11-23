@@ -20,6 +20,7 @@ import (
 	"github.com/gabeduke/hindsight/internal/config"
 	"github.com/gabeduke/hindsight/internal/hub"
 	"github.com/gabeduke/hindsight/internal/midi"
+	"github.com/gabeduke/hindsight/internal/rig"
 	"github.com/gabeduke/hindsight/internal/surface"
 	"github.com/gabeduke/hindsight/internal/tape"
 	"github.com/gorilla/mux"
@@ -45,6 +46,12 @@ func main() {
 		log.Fatalf("config: %v", err)
 	}
 	cfg.Version = version
+	// Rig profiles added after the release (the catalog): data in a folder,
+	// read once now and again when one is installed. A bad file is logged and
+	// skipped; the release's profiles are never shadowed.
+	for _, err := range rig.LoadDir(cfg.ProfilesDir) {
+		log.Printf("[!] profiles: %v", err)
+	}
 	// DEVICE_MATCH=auto and CHANNELS=auto are settled here, once, before the
 	// ring and the meters are sized from them: look at what is plugged in
 	// now. The demo's synthetic interface has eight inputs, like the EP-136.

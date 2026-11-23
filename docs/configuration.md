@@ -95,6 +95,8 @@ because the defaults are almost always right.
 | `HUB_URL` | *(empty)* | The hub that gives this Pi an HTTPS name, e.g. `https://hub.hindsight.leetserve.com`. Off unless `HUB_TOKEN` is set too (`docs/install-raspberry-pi.md`, *HTTPS with a hub*) |
 | `HUB_TOKEN` | *(empty)* | This Pi's token from `scripts/hub-enroll.sh`. A secret: env file only |
 | `HUB_TLS_ADDR` | `127.0.0.1:5001` | Where Caddy asks Hindsight for the certificate (`/tls`). Must be loopback; it hands out the private key |
+| `PROFILES_DIR` | `~/hindsight/profiles` | Rig profiles added after the release (`*.json`, data only), read at start and when one is installed. A release profile's id is never shadowed |
+| `CATALOG_URL` | *(empty)* | An https address of a gear catalog (`internal/rig/catalog`) to list and install profiles from. Off when empty; nothing is fetched until a person asks |
 
 `PORT` is the one you will actually reach for, because **macOS occupies 5000
 with ControlCenter's AirPlay Receiver**, so running the demo on a Mac needs

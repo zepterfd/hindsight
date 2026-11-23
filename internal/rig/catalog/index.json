@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "behringer-x32",
+      "name": "Behringer X32 (and Midas M32)",
+      "maker": "Behringer",
+      "kind": "mixer",
+      "linux": "partial",
+      "confidence": "unconfirmed",
+      "how": "Its USB card is an audio interface of up to 32 channels each way; Behringer's own driver is for Windows, and reports are that macOS and Linux use their class-compliant USB audio with no download. Not tried on a Pi here. Mixing Station (a phone, tablet or desktop app) controls the mixer over the network: it needs no driver and does not carry audio, so it is not a Hindsight dependency; it just needs the mixer and the phone on the same network (or the tailnet).",
+      "page": "https://www.behringer.com/"
+    },
+    {
+      "id": "behringer-xr18",
+      "name": "Behringer XR18 / X AIR",
+      "maker": "Behringer",
+      "kind": "mixer",
+      "linux": "partial",
+      "confidence": "unconfirmed",
+      "how": "A rack mixer with no knobs: it is mixed from an app (Behringer's X AIR, or Mixing Station) over its own WiFi or your network, and has USB audio, 18 channels each way, that reports say is class-compliant on macOS and Linux (Windows wants Behringer's driver). Not tried on a Pi here.",
+      "page": "https://www.behringer.com/"
+    },
+    {
+      "id": "mixing-station",
+      "name": "Mixing Station",
+      "maker": "Davide Bianco",
+      "kind": "app",
+      "linux": "network",
+      "confidence": "sourced",
+      "how": "Not a driver and not a Pi program: a remote-control app for many digital mixers, on Android, iOS and desktop. Install it on the phone or laptop, and put it on the same network as the mixer. Hindsight records the mixer's USB audio; this app moves its faders. They don't talk to each other.",
+      "page": "https://mixingstation.app/"
+    },
+    {
+      "id": "focusrite-scarlett",
+      "name": "Focusrite Scarlett (Solo, 2i2, 4i4 and kin)",
+      "maker": "Focusrite",
+      "kind": "interface",
+      "linux": "works",
+      "confidence": "unconfirmed",
+      "how": "USB class-compliant: the kernel's audio driver carries the audio, so there is nothing to download for Hindsight. Focusrite Control, the maker's mixer app, is Windows and macOS only; recent Linux kernels have a driver (scarlett2) for its on-board mixer and switches, which Hindsight does not need.",
+      "page": "https://focusrite.com/"
+    },
+    {
+      "id": "zoom-r20",
+      "name": "Zoom R20",
+      "maker": "Zoom",
+      "kind": "recorder",
+      "linux": "unknown",
+      "confidence": "unconfirmed",
+      "how": "A multitrack recorder that can also act as a USB audio interface. Zoom's driver is for Windows; whether it presents as class-compliant on a Pi has not been read off a unit (the rig's zoom-r20 profile is inert for that reason). Capture it with the steps in docs/hardware/README.md and send the result.",
+      "page": "https://zoomcorp.com/"
+    },
+    {
+      "id": "zoom-ams-24",
+      "name": "Zoom AMS-24",
+      "maker": "Zoom",
+      "kind": "interface",
+      "linux": "works",
+      "confidence": "owner",
+      "how": "Tried on the jam-space Pi: it appears as USB audio (1686:067f), records only, and needs no driver. It is the Sidekick's extra input (docs/plan/extra-inputs.md).",
+      "page": "https://zoomcorp.com/"
+    },
+    {
+      "id": "boss-rc-505mkii",
+      "name": "Boss RC-505mkII",
+      "maker": "Boss",
+      "kind": "controller",
+      "linux": "unknown",
+      "confidence": "unconfirmed",
+      "how": "A loop station with USB audio and MIDI. Boss supplies a driver for Windows and macOS; whether it works class-compliant on a Pi has not been read off a unit. MIDI over USB (for Hindsight's clock and notes) is separate and generally needs no driver.",
+      "page": "https://www.boss.info/"
+    }
+  ]
+}

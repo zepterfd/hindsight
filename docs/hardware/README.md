@@ -86,10 +86,30 @@ in [images.md](images.md) first.
 `internal/rig/profiles/` is under `internal/`, so a change to a profile cuts a
 release like any code change. A change to this folder alone does not.
 
+## The gear catalog, and adding a profile without a release
+
+`internal/rig/catalog` (`GET /api/catalog`, `POST /api/catalog/install`). The
+catalog is a list of popular gear and how each fares on a Pi, in words, with
+a link to the maker. "Driver download" is the wrong frame on a Pi: most gear
+is USB class-compliant (the kernel's driver; nothing to fetch), a maker's
+Windows or macOS driver does nothing on Linux, and a remote-control app such
+as Mixing Station runs on a phone and talks to a mixer over the network.
+Every seeded entry has a confidence (`sourced`, `owner`, `unconfirmed`)
+and **only `owner` has been tried on this Pi**; the rest are reports.
+
+The one thing that can be installed is a **profile**: data. An entry that has
+one carries its address and SHA-256. `Install` fetches it (https, or this
+machine; 256 KiB at most), checks the hash, requires it to parse as a profile
+the rig accepts and to carry the entry's own id, and writes it atomically to
+`PROFILES_DIR`. Nothing downloaded is ever run. A profile can only add: one
+with a release profile's id is ignored, so a bad file cannot change how a
+known device is drawn. `CATALOG_URL` is where more entries come from; with it
+unset, nothing leaves the Pi.
+
 ## Later: sharing profiles
 
-Not built; this is what the files are shaped for. Nothing here talks to a
-server yet.
+Mostly this, now built (above) for the catalog; what is not is a hub that
+serves one. Nothing talks to the hub for it yet.
 
 - **Lookup, in order:** the release's own profiles (embedded, so a kit works
   offline); then a newer copy from the hub, data only, never code; then the
