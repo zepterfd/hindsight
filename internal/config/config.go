@@ -59,6 +59,10 @@ type Config struct {
 	MIDILatencyMS  float64 // added to every MIDI timestamp before alignment
 	MIDISnapBars   bool    // start a take on the last downbeat before the window
 
+	// Analysis (internal/analyze): what a take sounds like, worked out in the
+	// background while the rig is idle.
+	AnalyzeInstruments bool // label each take percussion, bass, chords, lead or ambience
+
 	// The tape (docs/architecture/tape.md). Always on.
 	TapeDir     string
 	TapeTracks  int
@@ -145,6 +149,7 @@ func LoadFrom(get func(string) string) (*Config, error) {
 		MIDIRingEvents:     envInt(get, "MIDI_RING_EVENTS", 1_000_000),
 		MIDILatencyMS:      envFloat(get, "MIDI_LATENCY_MS", 0),
 		MIDISnapBars:       envBool(get, "MIDI_SNAP_BARS", true),
+		AnalyzeInstruments: envBool(get, "ANALYZE_INSTRUMENTS", true),
 		TapeDir:            env(get, "TAPE_DIR", filepath.Join(home, "hindsight", "tapes")),
 		TapeTracks:         envInt(get, "TAPE_TRACKS", 4),
 		TapeLengthS:        envInt(get, "TAPE_LENGTH_S", 1200),
