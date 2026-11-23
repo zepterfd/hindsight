@@ -3,6 +3,7 @@ package config
 import "testing"
 
 func TestCaptionsConfig(t *testing.T) {
+	get := func(m map[string]string) func(string) string { return func(k string) string { return m[k] } }
 	c, err := LoadFrom(get(map[string]string{}))
 	if err != nil || c.CaptionsOn() {
 		t.Fatalf("off by default: %v %v", c.CaptionsOn(), err)
