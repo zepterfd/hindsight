@@ -106,6 +106,16 @@ type Config struct {
 	HubToken   string
 	HubTLSAddr string // the loopback listener Caddy asks for the certificate
 
+	// Captions (internal/transcribe): off unless TranscribeURL is set (or
+	// TranscribeDemo). The URL is an OpenAI-compatible API base; audio leaves
+	// the Pi only for the address named here. Env file only: an address and
+	// a secret, so not in the settings registry.
+	TranscribeURL      string
+	TranscribeModel    string
+	TranscribeKey      string
+	TranscribeLanguage string
+	TranscribeDemo     bool // made-up captions, no service
+
 	// SettingsFile is the app's settings.json (SETTINGS_FILE), and
 	// SettingsErr why it was not used, when it wasn't: Load then fell back to
 	// the environment alone. See settings.go.
@@ -160,6 +170,11 @@ func LoadFrom(get func(string) string) (*Config, error) {
 		Port:               env(get, "PORT", "5000"),
 		UpdateRepo:         env(get, "UPDATE_REPO", "gabeduke/hindsight"),
 		HubURL:             strings.TrimRight(strings.TrimSpace(get("HUB_URL")), "/"),
+		TranscribeURL:      strings.TrimRight(strings.TrimSpace(get("TRANSCRIBE_URL")), "/"),
+		TranscribeModel:    strings.TrimSpace(get("TRANSCRIBE_MODEL")),
+		TranscribeKey:      strings.TrimSpace(get("TRANSCRIBE_API_KEY")),
+		TranscribeLanguage: strings.TrimSpace(get("TRANSCRIBE_LANGUAGE")),
+		TranscribeDemo:     envBool(get, "TRANSCRIBE_DEMO", false),
 		HubToken:           strings.TrimSpace(get("HUB_TOKEN")),
 		HubTLSAddr:         env(get, "HUB_TLS_ADDR", "127.0.0.1:5001"),
 		Version:            "dev",
@@ -306,6 +321,9 @@ func SameCard(a, b string) bool {
 	a, b = norm(a), norm(b)
 	return a != "" && b != "" && (strings.Contains(a, b) || strings.Contains(b, a))
 }
+
+// CaptionsOn says the captions analyser should be offered.
+func (c *Config) CaptionsOn() bool { return c.TranscribeURL != "" || c.TranscribeDemo }
 
 // HubOn says the hub client should run: both HUB_URL and HUB_TOKEN set.
 func (c *Config) HubOn() bool { return c.HubURL != "" && c.HubToken != "" }

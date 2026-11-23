@@ -194,6 +194,7 @@ func (a *API) SetupRoutes(r *mux.Router) {
 	r.HandleFunc("/api/take/flags", a.handleTakeFlagPatch).Methods(http.MethodPatch)
 	r.HandleFunc("/api/take/flags", a.handleTakeFlagDelete).Methods(http.MethodDelete)
 	r.HandleFunc("/api/take/analysis", a.handleAnalysisGet).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc("/api/take/captions", a.handleCaptionsGet).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/api/take/analyze", a.handleAnalyzePost).Methods(http.MethodPost)
 	r.HandleFunc("/api/take/undo", a.handleTakeUndo).Methods(http.MethodPost)
 	r.HandleFunc("/api/trash", a.handleTrashList).Methods(http.MethodGet, http.MethodHead)

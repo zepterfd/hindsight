@@ -189,6 +189,24 @@ reaches every open page as any other change to a take.
 exist is the binary's (`cmd/hindsight/analyzers.go`); an analyser that needs
 configuration is left out when it has none.
 
+### Captions
+
+`internal/transcribe` is the first analyser: the words in a take and when
+they were said, in the section `captions`. The speech-to-text service is one
+interface (`Transcriber`), so where the words come from is the owner's
+choice: `HTTP` speaks the OpenAI audio API (OpenAI itself, or a Whisper
+server such as whisper.cpp's, faster-whisper-server or LocalAI on the same
+network, which keeps the audio at home), and `Demo` makes words up for the
+demo build. The analyser streams the take down to speech rate with
+`dsp.ReadMono`, cuts it into ten-minute pieces (a service caps an upload,
+and one request for a whole take would fail at minute nine), **skips a
+piece quieter than -55 dBFS** (nobody is talking, and Whisper-family models
+invent words for room tone), and shifts each piece's segments onto the take's
+timeline. It is listed in `cmd/hindsight/analyzers.go` only when
+`TRANSCRIBE_URL` (or `TRANSCRIBE_DEMO`) is set, so a Pi that was never set
+up sends nothing anywhere. `GET /api/take/captions?file=` serves the result
+as WebVTT.
+
 ## Shares queue
 
 `GET /api/render` runs ffmpeg. Two at once on a Pi compete with the capture

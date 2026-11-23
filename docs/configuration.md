@@ -15,7 +15,7 @@ Changes apply on restart, which the sheet offers. What the app can change is
 the registry in `internal/config/settings.go`; the rest stay env-only because
 they say where things live (`PORT`, `OUTPUT_DIR`, `TAPE_DIR`, `STATIC_DIR`,
 `UPDATE_REPO`, `SETTINGS_FILE`, `HUB_URL`, `HUB_TLS_ADDR`), are secrets
-(`HUB_TOKEN`), or are development knobs
+(`HUB_TOKEN`, `TRANSCRIBE_API_KEY`), or are development knobs
 (`FRAMES_PER_BUFFER`, `MIDI_RING_EVENTS`, `TAPE_DEMO_ALIGN`).
 
 A `settings.json` that can't be read, or that makes a configuration Hindsight
@@ -95,6 +95,11 @@ because the defaults are almost always right.
 | `HUB_URL` | *(empty)* | The hub that gives this Pi an HTTPS name, e.g. `https://hub.hindsight.leetserve.com`. Off unless `HUB_TOKEN` is set too (`docs/install-raspberry-pi.md`, *HTTPS with a hub*) |
 | `HUB_TOKEN` | *(empty)* | This Pi's token from `scripts/hub-enroll.sh`. A secret: env file only |
 | `HUB_TLS_ADDR` | `127.0.0.1:5001` | Where Caddy asks Hindsight for the certificate (`/tls`). Must be loopback; it hands out the private key |
+| `TRANSCRIBE_URL` | *(empty)* | Turns on **captions** (the words in a take, with times): an OpenAI-compatible API base, e.g. `https://api.openai.com/v1` or a Whisper server on your own network (`http://whisper.internal:8080/v1`). **Audio leaves the Pi only for this address**, in ten-minute mono pieces, and never while nothing is set |
+| `TRANSCRIBE_MODEL` | `whisper-1` | The model name the service expects |
+| `TRANSCRIBE_API_KEY` | *(empty)* | Sent as a bearer token when set. A secret: env file only. A local server wants none |
+| `TRANSCRIBE_LANGUAGE` | *(empty)* | An ISO-639-1 hint (`en`); empty lets the service detect it |
+| `TRANSCRIBE_DEMO` | `false` | Made-up captions with no service, to see the feature |
 
 `PORT` is the one you will actually reach for, because **macOS occupies 5000
 with ControlCenter's AirPlay Receiver**, so running the demo on a Mac needs
