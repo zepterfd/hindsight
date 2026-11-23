@@ -10,10 +10,14 @@ package rig
 import (
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/gabeduke/hindsight/internal/config"
 )
@@ -172,8 +176,92 @@ func (p Profile) check() error {
 	return nil
 }
 
-// Profiles are the embedded profiles, by id.
-func Profiles() []Profile { return append([]Profile(nil), profiles...) }
+// ParseProfile reads one profile file and refuses one that doesn't hang
+// together, as the embedded ones are refused. It is the only way a profile
+// from outside the release gets in, and it reads data: nothing in a profile
+// is ever run.
+func ParseProfile(b []byte) (Profile, error) {
+	var p Profile
+	if err := json.Unmarshal(b, &p); err != nil {
+		return Profile{}, fmt.Errorf("profile: %w", err)
+	}
+	if err := p.check(); err != nil {
+		return Profile{}, fmt.Errorf("profile %s: %w", p.ID, err)
+	}
+	return p, nil
+}
+
+// The profiles an owner added (the catalog, internal/rig/catalog): data in a
+// folder, read at start and again when one is installed. The release is the
+// floor and an added profile only adds: one whose id a release profile has is
+// ignored, so a bad file can't change how a device the release knows is drawn.
+var (
+	extraMu sync.RWMutex
+	extra   []Profile
+)
+
+// LoadDir reads every *.json profile in dir into the added profiles, and
+// returns what it could not read, one error per file, for the log. A missing
+// folder is no profiles, and no error.
+func LoadDir(dir string) []error {
+	ents, err := os.ReadDir(dir)
+	if errors.Is(err, os.ErrNotExist) {
+		SetExtra(nil)
+		return nil
+	}
+	if err != nil {
+		return []error{err}
+	}
+	var ps []Profile
+	var errs []error
+	for _, e := range ents {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		b, err := os.ReadFile(filepath.Join(dir, e.Name()))
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		p, err := ParseProfile(b)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", e.Name(), err))
+			continue
+		}
+		ps = append(ps, p)
+	}
+	SetExtra(ps)
+	return errs
+}
+
+// SetExtra replaces the added profiles, dropping any a release profile owns
+// the id of.
+func SetExtra(ps []Profile) {
+	own := map[string]bool{}
+	for _, p := range profiles {
+		own[p.ID] = true
+	}
+	var keep []Profile
+	for _, p := range ps {
+		if !own[p.ID] {
+			keep = append(keep, p)
+		}
+	}
+	sort.Slice(keep, func(i, j int) bool { return keep[i].ID < keep[j].ID })
+	extraMu.Lock()
+	extra = keep
+	extraMu.Unlock()
+}
+
+// all is the release's profiles, then the added ones.
+func all() []Profile {
+	extraMu.RLock()
+	defer extraMu.RUnlock()
+	return append(append([]Profile(nil), profiles...), extra...)
+}
+
+// Profiles are the embedded profiles, then the ones added, by id.
+func Profiles() []Profile { return all() }
 
 // ForUSB finds the profile of an audio card by its USB id ("2367:9420").
 func ForUSB(id string) (Profile, bool) {
@@ -181,7 +269,7 @@ func ForUSB(id string) (Profile, bool) {
 	if id == "" {
 		return Profile{}, false
 	}
-	for _, p := range profiles {
+	for _, p := range all() {
 		if p.Match.USB != "" && strings.ToLower(p.Match.USB) == id {
 			return p, true
 		}
@@ -199,7 +287,7 @@ func ForName(name string) (Profile, bool) {
 	if len(strings.TrimSpace(name)) < 3 {
 		return Profile{}, false
 	}
-	for _, p := range profiles {
+	for _, p := range all() {
 		for _, x := range []string{p.Short, p.Match.MIDI} {
 			if x != "" && config.SameCard(name, x) {
 				return p, true
@@ -213,7 +301,7 @@ func ForName(name string) (Profile, bool) {
 // substring in the port's name, case-insensitively, as MIDI_DEVICES matches.
 func ForMIDI(name string) (Profile, bool) {
 	n := strings.ToLower(name)
-	for _, p := range profiles {
+	for _, p := range all() {
 		if m := strings.ToLower(p.Match.MIDI); m != "" && strings.Contains(n, m) {
 			return p, true
 		}

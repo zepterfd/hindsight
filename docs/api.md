@@ -32,6 +32,8 @@ internet.
 | `POST /api/flag` | Flag a moment at the ring's newest frame (the main page's *Flag now*) |
 | `DELETE /api/flag` | Remove one live mark (`?frame=`), or every one (`?all=1`) |
 | `GET /api/peaks?file=` | Precomputed waveform, so phones do not download audio to draw one; with a range, that range's peaks |
+| `GET /api/catalog` | The gear catalog: popular devices and how they fare on a Pi (`linux`: works / partial / network / unsupported / unknown, with how and a link to the maker), which have a rig profile to install and which are `installed`. The release's list, with `CATALOG_URL`'s laid over it; `fetch_error` if that couldn't be read |
+| `POST /api/catalog/install?id=` | Fetch that entry's rig profile, check its SHA-256 and that it parses as a profile, add it to `PROFILES_DIR`, and tell the rig. 501 with no `CATALOG_URL`, 404 unknown id, 409 an entry with no profile, 502 a failed or mismatched download |
 | `GET /api/download?file=[&dl=1]` | Stream inline, or force a download |
 | `DELETE /api/delete?file=` | Move a take and its sidecars to the trash |
 | `POST /api/cut?file=` | Export a region of a take as a new take, with 3ms declick fades |
