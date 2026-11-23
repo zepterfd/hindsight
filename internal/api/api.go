@@ -23,6 +23,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/gabeduke/hindsight/docs"
+	"github.com/gabeduke/hindsight/internal/analyze"
 	"github.com/gabeduke/hindsight/internal/audio"
 	"github.com/gabeduke/hindsight/internal/bundle"
 	"github.com/gabeduke/hindsight/internal/config"
@@ -114,6 +115,11 @@ type API struct {
 	// recordingHook stands in for the tape's recording in tests.
 	recordingHook func() *tape.Recording
 
+	// analyzer does a take's analyses (analysis.go); nil where none are set
+	// up. analyzeCtx is the context their work ends with.
+	analyzer   *analyze.Runner
+	analyzeCtx context.Context
+
 	// bg counts work a request leaves running -- a preview encode, a prune --
 	// so a test can wait for it before its takes folder goes.
 	bg sync.WaitGroup
@@ -187,6 +193,8 @@ func (a *API) SetupRoutes(r *mux.Router) {
 	r.HandleFunc("/api/take/flags", a.handleTakeFlagPost).Methods(http.MethodPost)
 	r.HandleFunc("/api/take/flags", a.handleTakeFlagPatch).Methods(http.MethodPatch)
 	r.HandleFunc("/api/take/flags", a.handleTakeFlagDelete).Methods(http.MethodDelete)
+	r.HandleFunc("/api/take/analysis", a.handleAnalysisGet).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc("/api/take/analyze", a.handleAnalyzePost).Methods(http.MethodPost)
 	r.HandleFunc("/api/take/undo", a.handleTakeUndo).Methods(http.MethodPost)
 	r.HandleFunc("/api/trash", a.handleTrashList).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc("/api/trash/restore", a.handleTrashRestore).Methods(http.MethodPost)

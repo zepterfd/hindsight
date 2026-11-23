@@ -50,6 +50,9 @@ type takeSig struct {
 	metaIno        uint64
 	preview, peaks bool
 	midi           bool
+	// The analysis sidecar's size and modification time (-1: none), so a
+	// finished analysis reaches the list as any other change to a take.
+	analysisSize, analysisMod int64
 }
 
 func NewTakeList(dir string) *TakeList {
@@ -129,13 +132,16 @@ func (l *TakeList) scan() ([]string, map[string]fs.FileInfo, map[string]takeSig,
 
 func sigFor(wav string, infos map[string]fs.FileInfo) takeSig {
 	stem := strings.TrimSuffix(wav, ".wav")
-	s := takeSig{metaSize: -1, metaMod: -1}
+	s := takeSig{metaSize: -1, metaMod: -1, analysisSize: -1, analysisMod: -1}
 	if i := infos[wav]; i != nil {
 		s.wavSize, s.wavMod = i.Size(), i.ModTime().UnixNano()
 	}
 	if i := infos[stem+".meta.json"]; i != nil {
 		s.metaSize, s.metaMod = i.Size(), i.ModTime().UnixNano()
 		s.metaIno = inodeOf(i)
+	}
+	if i := infos[stem+".analysis.json"]; i != nil {
+		s.analysisSize, s.analysisMod = i.Size(), i.ModTime().UnixNano()
 	}
 	_, s.preview = infos[stem+"_preview.mp3"]
 	_, s.peaks = infos[stem+".peaks.json"]

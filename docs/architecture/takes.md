@@ -12,6 +12,7 @@ stem:
 | `_preview.mp3` | in the background after a save or cut | What the list plays, and what the waveform page scrubs |
 | `.mid`, `.manifest.json` | at save, when MIDI was flowing; a cut gets its region of the source's | The take's MIDI and how it lines up |
 | `.history.json` | on every edit a person makes | The last 50 changes, for Undo |
+| `.analysis.json` | in the background, by `internal/analyze` | What a program worked out about the audio: a section per analyser (a transcript, the instruments heard, …) |
 
 ## A take appears only when it's complete
 
@@ -153,6 +154,40 @@ written as the audio arrives (`internal/audio/phone.go`):
 The page side is `web/static/lib/phone/`: an AudioWorklet that taps raw float
 PCM, an uploader that numbers chunks, keeps them until they're acked and
 resends after a reconnect, and the recorder sheet.
+
+## Analysis
+
+`internal/audio/analysis.go`, `internal/analyze`. What a program works out
+about a take's audio (what was said, what was played, what it sounds like)
+is kept apart from what its owner says about it. It goes in
+`<stem>.analysis.json`: one file, one **section** per analyser, keyed by the
+analyser's name. A section is opaque to `audio`; the analyser that wrote it
+reads it back. `Take.Analysis` lists the sections a take holds, so the list
+shows what exists and `GET /api/take/analysis?file=` gives the sections.
+
+It is not in `Meta` because `Meta` is rewritten by every edit a person
+makes and walked back by Undo, and derived data that a machine can recompute
+must not ride in that history, nor have a slow read-modify-write queue behind
+a flag edit. It is one file, not one per analyser, so a new analyser changes
+none of `takeFiles`, the trash, the startup sweep or the list's signature.
+
+`analyze.Analyzer` is the whole extension point: `Key`, `Version`,
+`Analyze(ctx, Input) (any, error)`. The `Runner` finds takes missing a
+section (or holding one from an older `Version`), newest first, and runs
+them one at a time, **only while `Busy()` says the rig is idle**, so a
+transcription never competes with the capture path for the Pi's CPU. A
+section is wrapped (`analyze.Section`: version, when, how long, and the
+result or the error). A failed analysis is stored as an error and not tried
+again until the analyser's version moves; a cancelled one stores nothing.
+A result is written under the take's lock (`audio.SetAnalysis`) and refused
+if the take has gone, so an analysis that outlives a delete leaves nothing
+behind. The list's signature includes the sidecar, so a finished analysis
+reaches every open page as any other change to a take.
+
+`POST /api/take/analyze?file=&kind=` runs one now, in the background (202;
+409 if that analysis of that take is already under way). Which analyses
+exist is the binary's (`cmd/hindsight/analyzers.go`); an analyser that needs
+configuration is left out when it has none.
 
 ## Shares queue
 

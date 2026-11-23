@@ -454,12 +454,12 @@ func SweepPartials(dir string) {
 }
 
 // internalSidecarStem returns the take stem of a .meta.json, .peaks.json,
-// .peaks.bin or .history.json name.
+// .peaks.bin, .history.json or .analysis.json name.
 func internalSidecarStem(name string) (string, bool) {
 	if strings.HasPrefix(name, ".") {
 		return "", false
 	}
-	for _, suf := range []string{".meta.json", ".peaks.json", ".peaks.bin", ".history.json"} {
+	for _, suf := range []string{".meta.json", ".peaks.json", ".peaks.bin", ".history.json", ".analysis.json"} {
 		if strings.HasSuffix(name, suf) {
 			return strings.TrimSuffix(name, suf), true
 		}
@@ -839,6 +839,10 @@ type Take struct {
 	TapeID        string            `json:"tape_id,omitempty"`
 	LaneKinds     map[string]string `json:"lane_kinds,omitempty"`
 	Record        *Record           `json:"record,omitempty"`
+
+	// Analysis names the sections of the take's analysis sidecar (analysis.go):
+	// what has been worked out about its audio, not what it holds.
+	Analysis []string `json:"analysis,omitempty"`
 }
 
 // ListTakes returns starred takes first, then the rest newest first. Duration
@@ -927,6 +931,7 @@ func takeFromFile(dir, name string, info os.FileInfo) Take {
 	t.TapeID = m.TapeID
 	t.LaneKinds = m.LaneKinds
 	t.Record = m.Record
+	t.Analysis = AnalysisKeys(full)
 	return t
 }
 

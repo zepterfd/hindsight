@@ -90,11 +90,12 @@ func takeFiles(wav string) []string {
 		historyPath(wav),
 		MIDIPath(wav),
 		ManifestPath(wav),
+		AnalysisPath(wav),
 	}
 }
 
 // sidecarSuffixes are what follows a take's stem in its sidecars' names.
-var sidecarSuffixes = []string{"_preview.mp3", ".peaks.json", ".peaks.bin", ".meta.json", ".history.json", ".mid", ".manifest.json"}
+var sidecarSuffixes = []string{"_preview.mp3", ".peaks.json", ".peaks.bin", ".meta.json", ".history.json", ".mid", ".manifest.json", ".analysis.json"}
 
 // sidecarStem returns the take stem of any sidecar's name.
 func sidecarStem(name string) (string, bool) {
